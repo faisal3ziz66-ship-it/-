@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تعبئة النماذج - فراغات الوورد</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Cairo+Play:wght@600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#faf8f3;
+    --card:#ffffff;
+    --ink:#22262f;
+    --muted:#767a85;
+    --line:#e9e4d8;
+    --line-soft:#f1ede3;
+    --accent:#eeb426;
+    --accent-deep:#c8930c;
+    --accent-soft:#fdf3d9;
+    --accent-ink:#4a3900;
+    --green:#2f9e44;
+    --green-soft:#e9f7ec;
+    --red:#e03131;
+    --red-soft:#fdebeb;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.6;
+  }
+  .page{max-width:660px; margin:0 auto; padding:28px 20px 60px;}
+
+  .top{margin-bottom:28px;}
+  .top h1{font-size:22px; font-weight:800; margin:0 0 6px;}
+  .top .sub{color:var(--muted); font-size:14px; margin:0;}
+
+  .step{margin-bottom:18px;}
+  .step-head{display:flex; gap:12px; align-items:flex-start; margin-bottom:12px;}
+  .step-num{
+    flex:none; width:28px; height:28px; border-radius:50%;
+    background:var(--ink); color:#fff; font-weight:700; font-size:13px;
+    display:flex; align-items:center; justify-content:center; margin-top:2px;
+  }
+  .step-head h2{font-size:16px; font-weight:700; margin:0 0 2px;}
+  .step-desc{color:var(--muted); font-size:13px; margin:0;}
+  .step-body{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:16px; margin-right:40px;
+  }
+  @media (max-width:480px){
+    .step-body{margin-right:0;}
+  }
+
+  .drop{
+    border:2px dashed #d9d2bf; border-radius:12px; padding:30px 16px; text-align:center;
+    color:var(--muted); cursor:pointer; transition:.15s; font-size:14px;
+  }
+  .drop:hover{border-color:var(--accent); background:var(--accent-soft); color:var(--accent-ink);}
+  .drop-icon{display:block; font-size:26px; margin-bottom:8px;}
+  input[type=file]{display:none;}
+
+  button{
+    font-family:inherit; cursor:pointer; border:none; border-radius:9px;
+    padding:10px 16px; font-size:13px; font-weight:700;
+  }
+  .btn-primary{background:var(--accent); color:var(--accent-ink); width:100%;}
+  .btn-primary:hover{background:var(--accent-deep);}
+  .btn-primary:disabled{background:#e5e1d3; color:#a6a29a; cursor:not-allowed;}
+  .btn-secondary{background:#f1ede3; color:var(--ink);}
+  .btn-secondary:hover{background:#e9e4d5;}
+  .btn-danger{background:var(--red-soft); color:var(--red);}
+  .btn-icon{background:transparent; padding:5px 8px; font-size:14px; color:var(--muted);}
+  .btn-icon:hover{color:var(--ink);}
+
+  .row{display:flex; gap:8px;}
+  .row-between{display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;}
+  .new-list-row{margin-bottom:14px; flex-wrap:wrap;}
+  .new-list-row input{flex:1 1 160px; min-width:120px;}
+  select, input[type=text]{
+    width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:8px;
+    font-family:inherit; font-size:13px; color:var(--ink); background:#fff;
+  }
+  select:focus, input[type=text]:focus{outline:2px solid var(--accent); outline-offset:1px; border-color:transparent;}
+
+  .list-tabs{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;}
+  .list-tab{
+    padding:6px 12px; border-radius:20px; font-size:12px; cursor:pointer;
+    background:#f1ede3; border:1px solid transparent; font-weight:600;
+  }
+  .list-tab.active{background:var(--accent-soft); border-color:var(--accent); color:var(--accent-ink);}
+  .empty{color:var(--muted); font-size:13px; text-align:center; padding:16px 0;}
+
+  .list-editor-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
+  .list-editor-head b{font-size:14px;}
+
+  .field-row{
+    display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:8px;
+    background:#faf9f6; border:1px solid var(--line-soft); border-radius:9px; padding:7px 8px;
+  }
+  .field-row .idx{font-size:11px; color:var(--muted); width:16px; flex:none;}
+  .field-row input{flex:1 1 120px; min-width:100px;}
+  .field-row .actions{display:flex; gap:2px; flex:none;}
+  .add-field-btn{width:100%; margin-top:2px; border:1px dashed var(--line); background:transparent; color:var(--muted);}
+  .add-field-btn:hover{border-color:var(--accent); color:var(--accent-ink);}
+
+  .checkbox-row{
+    display:flex; gap:8px; align-items:center; font-size:13px; color:var(--ink);
+    margin-bottom:14px;
+  }
+
+  .blank-item{
+    border:1px solid var(--line-soft); border-radius:10px; padding:11px 12px; margin-bottom:8px;
+    font-size:13px;
+  }
+  .blank-item .label{font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; display:flex; align-items:center; gap:6px;}
+  .kind-tag{
+    display:inline-block; font-size:10px; font-weight:700; padding:2px 7px; border-radius:5px;
+    background:#f1ede3; color:var(--muted);
+  }
+  .kind-tag-yellow{background:var(--accent-soft); color:var(--accent-ink);}
+  .blank-item .ctx{color:var(--ink); line-height:1.8;}
+  .blank-item mark{background:var(--accent-soft); color:var(--accent-ink); border-radius:3px; padding:0 3px; font-weight:700;}
+  .blank-item .match{margin-top:8px; display:flex; flex-wrap:wrap; gap:8px; align-items:center;}
+  .blank-item .match select{flex:1 1 200px;}
+  .badge{
+    display:inline-block; border-radius:6px; font-size:11px; padding:3px 9px; font-weight:700; flex:none;
+  }
+  .badge-auto{background:var(--green-soft); color:var(--green);}
+  .badge-order{background:#f1ede3; color:var(--muted);}
+
+  .status{font-size:13px; margin-top:10px;}
+  .status.ok{color:var(--green);}
+  .status.err{color:var(--red);}
+
+  .top-row{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
+  .settings-btn{background:#f1ede3; color:var(--ink); flex:none;}
+  .settings-btn:hover{background:var(--line);}
+  .settings-panel{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:16px; margin-bottom:22px;
+  }
+  .settings-row{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;}
+  .settings-row + .settings-row{margin-top:14px; padding-top:14px; border-top:1px solid var(--line-soft);}
+  .settings-label{font-size:13px; font-weight:700; flex:none;}
+  .theme-options{display:flex; gap:6px;}
+  .theme-btn{background:#f1ede3; color:var(--ink); font-size:12px;}
+  .theme-btn.active{background:var(--accent-soft); color:var(--accent-ink); box-shadow:inset 0 0 0 1px var(--accent);}
+  .accent-swatches{display:flex; gap:8px;}
+  .swatch{
+    width:26px; height:26px; border-radius:50%; cursor:pointer; border:2px solid transparent;
+    display:flex; align-items:center; justify-content:center; font-size:12px; color:#fff;
+  }
+  .swatch.active{border-color:var(--ink); box-shadow:0 0 0 2px var(--card);}
+  .settings-row-col{flex-direction:column; align-items:flex-start;}
+  .usage-list{margin:8px 0 0; padding-inline-start:20px; font-size:13px; color:var(--muted); line-height:1.8;}
+  .usage-list li{margin-bottom:8px;}
+  .usage-list li:last-child{margin-bottom:0;}
+  .usage-list b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="top">
+    <div class="top-row">
+      <div>
+        <h1>تعبئة الفراغات في الوورد</h1>
+      </div>
+      <button class="settings-btn" onclick="toggleSettingsPanel()" title="الإعدادات">⚙️</button>
+    </div>
+  </header>
+
+  <div id="settingsPanel" class="settings-panel" style="display:none;">
+    <div class="settings-row">
+      <span class="settings-label">المظهر</span>
+      <div class="theme-options" id="themeOptions"></div>
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">اللون المميز</span>
+      <div class="accent-swatches" id="accentSwatches"></div>
+    </div>
+    <div class="settings-row settings-row-col">
+      <span class="settings-label">طريقة الاستعمال</span>
+      <ol class="usage-list">
+        <li><b>القوائم والبيانات:</b> جهّز قائمة حقول (مثال: اسم المدير، القسم) لاستخدامها في التعبئة التلقائية، واحفظها لاستخدامها لاحقاً.</li>
+        <li><b>رفع المستند:</b> ارفع ملف Word (.docx) — تكتشف الأداة الفراغات المظللة باللون الأصفر، وكذلك الخطوط والنقاط المتكررة (____ / ....) والأقواس الفارغة [ ].</li>
+        <li><b>مراجعة المطابقة:</b> راجع تطابق كل فراغ مع الحقل الصحيح، وعدّل يدوياً إذا لزم.</li>
+        <li><b>التنزيل:</b> تأكد من صحة المطابقة أعلاه، ثم نزّل النسخة المعبأة.</li>
+      </ol>
+    </div>
+  </div>
+
+  <section class="step">
+    <div class="step-head">
+      <span class="step-num">1</span>
+      <div>
+        <h2>القوائم والبيانات</h2>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="list-tabs" id="listTabs"></div>
+      <div class="row new-list-row">
+        <input type="text" id="newListName" placeholder="اسم قائمة جديدة، مثال: الإدارة العليا">
+        <button class="btn-secondary" onclick="createList()">إضافة</button>
+        <button class="btn-secondary" onclick="document.getElementById('importListFile').click()">⬆️ استيراد Excel</button>
+        <input type="file" id="importListFile" accept=".xlsx,.xls,.csv" style="display:none;">
+      </div>
+      <div class="status" id="importStatus"></div>
+      <div id="listEditor"></div>
+      <div class="status" id="storageStatus"></div>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="step-head">
+      <span class="step-num">2</span>
+      <div>
+        <h2>رفع المستند</h2>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="drop" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <span class="drop-icon">📄</span>
+        اضغط لرفع ملف Word أو اسحبه هنا
+        <input type="file" id="fileInput" accept=".docx">
+      </div>
+      <div class="status" id="uploadStatus"></div>
+    </div>
+  </section>
+
+  <div id="blanksSection" style="display:none;">
+
+    <section class="step">
+      <div class="step-head">
+        <span class="step-num">3</span>
+        <div>
+          <h2>مراجعة المطابقة</h2>
+          <p class="step-desc" id="blankCount"></p>
+        </div>
+      </div>
+      <div class="step-body">
+        <div class="row-between" style="margin-bottom:12px;">
+          <label class="checkbox-row" style="margin-bottom:0;">
+            <input type="checkbox" id="removeHighlight" checked>
+            إزالة التظليل الأصفر بعد التعبئة
+          </label>
+          <button class="btn-icon" onclick="exportBlanksToExcel()" title="تصدير الفراغات إلى Excel لتعبئتها خارجياً">⬇️ تصدير Excel</button>
+        </div>
+        <div id="blanksList"></div>
+      </div>
+    </section>
+
+    <section class="step">
+      <div class="step-head">
+        <span class="step-num">4</span>
+        <div>
+          <h2>التنزيل</h2>
+        </div>
+      </div>
+      <div class="step-body">
+        <button class="btn-primary" id="generateBtn" onclick="generateDocx()">⬇️ تعبئة وتنزيل المستند</button>
+        <div class="status" id="genStatus"></div>
+      </div>
+    </section>
+
+  </div>
+
+</div>
+
+<script>
+let listsData = {};          // { listName: [{label, value}, ...] }
+let activeListName = null;
+let docxArrayBuffer = null;
+let zipRef = null;
+let xmlDoc = null;
+let blanks = [];             // {id, runs:[textNode,...], contextBefore, contextAfter, matchedFieldIdx, matchType}
+
+// ---------- Persistent storage ----------
+async function loadLists(){
+  try{
+    const res = await window.storage.get('template_lists', false);
+    listsData = res ? JSON.parse(res.value) : {};
+  }catch(e){
+    listsData = {};
+  }
+  const names = Object.keys(listsData);
+  if(names.length && !activeListName) activeListName = names[0];
+  renderListTabs();
+  renderListEditor();
+}
+
+async function saveLists(){
+  const statusEl = document.getElementById('storageStatus');
+  try{
+    await window.storage.set('template_lists', JSON.stringify(listsData), false);
+    statusEl.textContent = 'تم الحفظ ✓';
+    statusEl.className = 'status ok';
+    setTimeout(()=>{statusEl.textContent='';}, 1500);
+  }catch(e){
+    statusEl.textContent = 'تعذّر الحفظ';
+    statusEl.className = 'status err';
+  }
+}
+
+function createList(){
+  const input = document.getElementById('newListName');
+  const name = input.value.trim();
+  if(!name) return;
+  if(listsData[name]){ alert('هذا الاسم موجود بالفعل'); return; }
+  listsData[name] = [];
+  activeListName = name;
+  input.value = '';
+  saveLists();
+  renderListTabs();
+  renderListEditor();
+}
+
+function deleteList(name){
+  if(!confirm('حذف القائمة "'+name+'"؟')) return;
+  delete listsData[name];
+  if(activeListName === name) activeListName = Object.keys(listsData)[0] || null;
+  saveLists();
+  renderListTabs();
+  renderListEditor();
+}
+
+function renderListTabs(){
+  const el = document.getElementById('listTabs');
+  const names = Object.keys(listsData);
+  if(!names.length){ el.innerHTML = '<div class="empty">لا توجد قوائم بعد</div>'; return; }
+  el.innerHTML = names.map(n =>
+    `<div class="list-tab ${n===activeListName?'active':''}" onclick="selectList('${escAttr(n)}')">${escHtml(n)}</div>`
+  ).join('');
+}
+
+function selectList(name){
+  activeListName = name;
+  renderListTabs();
+  renderListEditor();
+  if(blanks.length) autoMatchAll();
+}
+
+function renderListEditor(){
+  const el = document.getElementById('listEditor');
+  if(!activeListName){ el.innerHTML=''; return; }
+  const fields = listsData[activeListName];
+  let html = `<div class="list-editor-head">
+      <b>${escHtml(activeListName)}</b>
+      <div class="row" style="gap:6px;">
+        <button class="btn-icon" onclick="exportListToExcel()" title="تصدير القائمة إلى Excel">⬇️ Excel</button>
+        <button class="btn-icon btn-danger" onclick="deleteList('${escAttr(activeListName)}')">حذف القائمة</button>
+      </div>
+    </div>`;
+  fields.forEach((f, i)=>{
+    html += `<div class="field-row">
+      <span class="idx">${i+1}</span>
+      <input type="text" placeholder="اسم الحقل (مثال: اسم المدير)" value="${escAttr(f.label)}" onchange="updateField(${i},'label',this.value)">
+      <input type="text" placeholder="القيمة" value="${escAttr(f.value)}" onchange="updateField(${i},'value',this.value)">
+      <div class="actions">
+        <button class="btn-icon" onclick="moveField(${i},-1)" title="تحريك لأعلى">↑</button>
+        <button class="btn-icon" onclick="moveField(${i},1)" title="تحريك لأسفل">↓</button>
+        <button class="btn-icon btn-danger" onclick="removeField(${i})">✕</button>
+      </div>
+    </div>`;
+  });
+  html += `<button class="add-field-btn" onclick="addField()">+ إضافة حقل</button>`;
+  el.innerHTML = html;
+}
+
+function addField(){
+  listsData[activeListName].push({label:'', value:''});
+  renderListEditor();
+  saveLists();
+}
+function removeField(i){
+  listsData[activeListName].splice(i,1);
+  renderListEditor();
+  saveLists();
+  if(blanks.length) autoMatchAll();
+}
+function moveField(i, dir){
+  const arr = listsData[activeListName];
+  const j = i+dir;
+  if(j<0 || j>=arr.length) return;
+  [arr[i], arr[j]] = [arr[j], arr[i]];
+  renderListEditor();
+  saveLists();
+  if(blanks.length) autoMatchAll();
+}
+function updateField(i, key, val){
+  listsData[activeListName][i][key] = val;
+  saveLists();
+  if(blanks.length) autoMatchAll();
+}
+
+function escHtml(s){ return (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function escAttr(s){ return escHtml(s).replace(/'/g,'&#39;'); }
+
+// ---------- Appearance settings (theme + accent color) ----------
+const THEME_PRESETS = {
+  light:{ bg:'#faf8f3', card:'#ffffff', ink:'#22262f', muted:'#767a85', line:'#e9e4d8', lineSoft:'#f1ede3', greenSoft:'#e9f7ec', redSoft:'#fdebeb' },
+  dark: { bg:'#15171b', card:'#1c1f27', ink:'#eef0f3', muted:'#9aa2ae', line:'#2b2f39', lineSoft:'#242832', greenSoft:'#123c26', redSoft:'#3d1616' }
+};
+const ACCENT_PRESETS = {
+  yellow:{ name:'أصفر',    accent:'#eeb426', deep:'#c8930c', lightSoft:'#fdf3d9', lightInk:'#4a3900', darkSoft:'#4a3900', darkInk:'#ffe9a8' },
+  blue:  { name:'أزرق',    accent:'#3b82f6', deep:'#2563eb', lightSoft:'#dbe9fe', lightInk:'#1e3a76', darkSoft:'#173563', darkInk:'#bcd6ff' },
+  green: { name:'أخضر',    accent:'#22b573', deep:'#178a57', lightSoft:'#d9f5e6', lightInk:'#0f4a30', darkSoft:'#0f3d28', darkInk:'#a8f0cd' },
+  rose:  { name:'وردي',    accent:'#ef5da8', deep:'#d63d89', lightSoft:'#fde3ef', lightInk:'#7a1450', darkSoft:'#521b39', darkInk:'#ffc2e0' },
+  violet:{ name:'بنفسجي',  accent:'#8b5cf6', deep:'#6d3fd1', lightSoft:'#ece3fd', lightInk:'#3c1d78', darkSoft:'#33215e', darkInk:'#d9c9ff' }
+};
+let currentTheme = 'light';
+let currentAccent = 'yellow';
+
+function applyAppearance(theme, accentKey){
+  const t = THEME_PRESETS[theme] || THEME_PRESETS.light;
+  const a = ACCENT_PRESETS[accentKey] || ACCENT_PRESETS.yellow;
+  const root = document.documentElement.style;
+  root.setProperty('--bg', t.bg);
+  root.setProperty('--card', t.card);
+  root.setProperty('--ink', t.ink);
+  root.setProperty('--muted', t.muted);
+  root.setProperty('--line', t.line);
+  root.setProperty('--line-soft', t.lineSoft);
+  root.setProperty('--green-soft', t.greenSoft);
+  root.setProperty('--red-soft', t.redSoft);
+  root.setProperty('--accent', a.accent);
+  root.setProperty('--accent-deep', a.deep);
+  root.setProperty('--accent-soft', theme==='dark' ? a.darkSoft : a.lightSoft);
+  root.setProperty('--accent-ink', theme==='dark' ? a.darkInk : a.lightInk);
+}
+
+function renderSettingsUI(){
+  const themeEl = document.getElementById('themeOptions');
+  themeEl.innerHTML = `
+    <button class="theme-btn ${currentTheme==='light'?'active':''}" onclick="setTheme('light')">☀️ فاتح</button>
+    <button class="theme-btn ${currentTheme==='dark'?'active':''}" onclick="setTheme('dark')">🌙 داكن</button>
+  `;
+  const accentEl = document.getElementById('accentSwatches');
+  accentEl.innerHTML = Object.entries(ACCENT_PRESETS).map(([key, a])=>
+    `<span class="swatch ${currentAccent===key?'active':''}" style="background:${a.accent}" title="${a.name}" onclick="setAccent('${key}')"></span>`
+  ).join('');
+}
+
+function toggleSettingsPanel(){
+  const el = document.getElementById('settingsPanel');
+  el.style.display = (el.style.display === 'none') ? 'block' : 'none';
+}
+
+function setTheme(theme){
+  currentTheme = theme;
+  applyAppearance(currentTheme, currentAccent);
+  renderSettingsUI();
+  saveAppearance();
+}
+
+function setAccent(accentKey){
+  currentAccent = accentKey;
+  applyAppearance(currentTheme, currentAccent);
+  renderSettingsUI();
+  saveAppearance();
+}
+
+async function saveAppearance(){
+  try{
+    await window.storage.set('appearance_settings', JSON.stringify({theme: currentTheme, accent: currentAccent}), false);
+  }catch(e){ /* non-critical, ignore */ }
+}
+
+async function loadAppearance(){
+  try{
+    const res = await window.storage.get('appearance_settings', false);
+    if(res){
+      const parsed = JSON.parse(res.value);
+      if(THEME_PRESETS[parsed.theme]) currentTheme = parsed.theme;
+      if(ACCENT_PRESETS[parsed.accent]) currentAccent = parsed.accent;
+    }
+  }catch(e){ /* first run, defaults stand */ }
+  applyAppearance(currentTheme, currentAccent);
+  renderSettingsUI();
+}
+
+// ---------- Excel export / import for lists and detected blanks ----------
+function downloadWorkbook(rows, sheetName, filename){
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  XLSX.writeFile(wb, filename);
+}
+
+function exportListToExcel(){
+  if(!activeListName) return;
+  const fields = listsData[activeListName] || [];
+  const rows = [['الحقل', 'القيمة']].concat(fields.map(f=>[f.label||'', f.value||'']));
+  downloadWorkbook(rows, 'القائمة', `${activeListName}.xlsx`);
+}
+
+function exportBlanksToExcel(){
+  if(!blanks.length) return;
+  const fields = (activeListName && listsData[activeListName]) ? listsData[activeListName] : [];
+  const rows = [['الحقل', 'القيمة', 'السياق في المستند']];
+  blanks.forEach((b, idx)=>{
+    const label = b.candidateLabel || `فراغ ${idx+1}`;
+    const value = (b.matchedFieldIdx>=0 && fields[b.matchedFieldIdx]) ? fields[b.matchedFieldIdx].value : '';
+    const context = `...${b.contextBefore}[فراغ]${b.contextAfter}...`;
+    rows.push([label, value, context]);
+  });
+  downloadWorkbook(rows, 'الفراغات', 'فراغات_المستند.xlsx');
+}
+
+document.getElementById('importListFile').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  await importListFromExcel(file);
+  e.target.value = '';
+});
+
+async function importListFromExcel(file){
+  const statusEl = document.getElementById('importStatus');
+  statusEl.textContent = 'جارٍ القراءة...';
+  statusEl.className = 'status';
+  try{
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, {type:'array'});
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, {header:1, defval:''});
+    // Skip a header row if the first row's first two cells look like column titles
+    let dataRows = rows;
+    if(rows.length){
+      const first = (rows[0]||[]).map(c=>String(c||'').trim());
+      if(/^(الحقل|اسم الحقل|label|field)$/i.test(first[0]||'') || /^(القيمة|value)$/i.test(first[1]||'')){
+        dataRows = rows.slice(1);
+      }
+    }
+    const parsedFields = dataRows
+      .map(r => ({ label: String(r[0]||'').trim(), value: String(r[1]||'').trim() }))
+      .filter(f => f.label || f.value);
+    if(!parsedFields.length){
+      statusEl.textContent = 'لم يتم العثور على بيانات صالحة (عمودين: الحقل، القيمة).';
+      statusEl.className = 'status err';
+      return;
+    }
+    let baseName = file.name.replace(/\.[^.]+$/, '') || 'قائمة مستوردة';
+    let name = baseName, n = 2;
+    while(listsData[name]){ name = `${baseName} (${n++})`; }
+    listsData[name] = parsedFields;
+    activeListName = name;
+    await saveLists();
+    renderListTabs();
+    renderListEditor();
+    if(blanks.length) autoMatchAll();
+    statusEl.textContent = `تم استيراد "${name}" — ${parsedFields.length} حقل ✓`;
+    statusEl.className = 'status ok';
+  }catch(err){
+    statusEl.textContent = 'تعذّر قراءة الملف. تأكد أنه Excel أو CSV صالح.';
+    statusEl.className = 'status err';
+  }
+}
+
+// ---------- Upload & parse docx ----------
+document.getElementById('fileInput').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  await handleFile(file);
+});
+document.getElementById('dropZone').addEventListener('dragover', e=>{e.preventDefault();});
+document.getElementById('dropZone').addEventListener('drop', async e=>{
+  e.preventDefault();
+  const file = e.dataTransfer.files[0];
+  if(file) await handleFile(file);
+});
+
+async function handleFile(file){
+  const statusEl = document.getElementById('uploadStatus');
+  statusEl.textContent = 'جارٍ التحليل...';
+  statusEl.className = 'status';
+  try{
+    docxArrayBuffer = await file.arrayBuffer();
+    zipRef = await JSZip.loadAsync(docxArrayBuffer);
+    const xmlStr = await zipRef.file('word/document.xml').async('text');
+    const parser = new DOMParser();
+    xmlDoc = parser.parseFromString(xmlStr, 'application/xml');
+    detectBlanks();
+    statusEl.textContent = `تم رفع "${file.name}" — تم العثور على ${blanks.length} فراغ.`;
+    statusEl.className = 'status ok';
+    document.getElementById('blanksSection').style.display = blanks.length ? 'block' : 'none';
+    if(!blanks.length){
+      statusEl.textContent = 'لم يتم العثور على فراغات (تظليل أصفر، خطوط تحت، نقاط، أو أقواس فارغة) في هذا المستند.';
+      statusEl.className = 'status err';
+    }
+    autoMatchAll();
+    renderBlanks();
+  }catch(err){
+    statusEl.textContent = 'تعذّر قراءة الملف. تأكد أنه ملف .docx صالح.';
+    statusEl.className = 'status err';
+  }
+}
+
+function isHighlighted(rPr){
+  if(!rPr) return false;
+  const hl = rPr.getElementsByTagName('w:highlight')[0];
+  if(hl && hl.getAttribute('w:val') === 'yellow') return true;
+  const shd = rPr.getElementsByTagName('w:shd')[0];
+  if(shd){
+    const fill = (shd.getAttribute('w:fill')||'').toUpperCase();
+    if(fill === 'FFFF00') return true;
+  }
+  return false;
+}
+
+// Text-pattern blanks: underscores, repeated dots, or empty brackets/parens
+// used as a fill-in line when the document has no yellow highlight at all.
+const PATTERN_BLANK_RE = /_{3,}|\.{4,}|\[\s*\]|\(\s{2,}\)/g;
+
+function deriveLabel(before){
+  let label = before.replace(/^.*?([\wأ-ي ]{2,30})[:：\-–—]\s*$/u, '$1');
+  if(label === before) label = ''; // no separator pattern matched
+  return label.trim();
+}
+
+function detectBlanks(){
+  blanks = [];
+  const paragraphs = xmlDoc.getElementsByTagName('w:p');
+  let blankId = 0;
+  for(let p=0; p<paragraphs.length; p++){
+    const para = paragraphs[p];
+    const runs = Array.from(para.getElementsByTagName('w:r'));
+    let paraPlainText = '';
+    // first pass: build plain text map with run boundaries
+    const runInfo = runs.map(r=>{
+      const rPr = r.getElementsByTagName('w:rPr')[0];
+      const tNodes = Array.from(r.getElementsByTagName('w:t'));
+      const text = tNodes.map(t=>t.textContent).join('');
+      const info = { run:r, tNodes, text, highlighted: isHighlighted(rPr), startOffset: paraPlainText.length };
+      paraPlainText += text;
+      return info;
+    });
+    // walk runs left-to-right; group consecutive highlighted runs into one
+    // blank, and scan non-highlighted runs for text-pattern blanks
+    let i = 0;
+    while(i < runInfo.length){
+      if(runInfo[i].highlighted){
+        let j = i;
+        const group = [];
+        let groupStart = runInfo[i].startOffset;
+        while(j < runInfo.length && runInfo[j].highlighted){
+          group.push(runInfo[j]);
+          j++;
+        }
+        const groupEnd = j < runInfo.length ? runInfo[j].startOffset : paraPlainText.length;
+        const before = paraPlainText.slice(Math.max(0, groupStart-40), groupStart);
+        const after = paraPlainText.slice(groupEnd, groupEnd+25);
+        blanks.push({
+          id: blankId++,
+          kind: 'highlight',
+          group,
+          contextBefore: before,
+          contextAfter: after,
+          candidateLabel: deriveLabel(before),
+          matchedFieldIdx: -1,
+          matchType: 'order'
+        });
+        i = j;
+      } else {
+        // scan this run's own text for underscore/dot/bracket blank patterns
+        const runText = runInfo[i].text;
+        const runStart = runInfo[i].startOffset;
+        PATTERN_BLANK_RE.lastIndex = 0;
+        let m;
+        while((m = PATTERN_BLANK_RE.exec(runText)) !== null){
+          const matchStart = m.index;
+          const matchLen = m[0].length;
+          const absStart = runStart + matchStart;
+          const absEnd = absStart + matchLen;
+          const before = paraPlainText.slice(Math.max(0, absStart-40), absStart);
+          const after = paraPlainText.slice(absEnd, absEnd+25);
+          blanks.push({
+            id: blankId++,
+            kind: 'pattern',
+            run: runInfo[i].run,
+            matchStart,
+            matchLen,
+            contextBefore: before,
+            contextAfter: after,
+            candidateLabel: deriveLabel(before),
+            matchedFieldIdx: -1,
+            matchType: 'order'
+          });
+        }
+        i++;
+      }
+    }
+  }
+}
+
+function normLabel(s){
+  return (s||'').replace(/\s+/g,'').replace(/[:：\-–—]/g,'').trim();
+}
+
+function autoMatchAll(){
+  if(!activeListName || !listsData[activeListName]) return;
+  const fields = listsData[activeListName];
+  const used = new Array(fields.length).fill(false);
+
+  // pass 1: label matching
+  blanks.forEach(b=>{
+    b.matchedFieldIdx = -1;
+    b.matchType = 'order';
+    if(!b.candidateLabel) return;
+    const nb = normLabel(b.candidateLabel);
+    if(!nb) return;
+    for(let k=0;k<fields.length;k++){
+      if(used[k]) continue;
+      const nf = normLabel(fields[k].label);
+      if(!nf) continue;
+      if(nb.includes(nf) || nf.includes(nb)){
+        b.matchedFieldIdx = k;
+        b.matchType = 'label';
+        used[k] = true;
+        break;
+      }
+    }
+  });
+  // pass 2: positional fallback for unmatched blanks, in order
+  let cursor = 0;
+  blanks.forEach(b=>{
+    if(b.matchedFieldIdx !== -1) return;
+    while(cursor < fields.length && used[cursor]) cursor++;
+    if(cursor < fields.length){
+      b.matchedFieldIdx = cursor;
+      b.matchType = 'order';
+      used[cursor] = true;
+      cursor++;
+    }
+  });
+  renderBlanks();
+}
+
+function renderBlanks(){
+  document.getElementById('blankCount').textContent = `عدد الفراغات: ${blanks.length}`;
+  const el = document.getElementById('blanksList');
+  const fields = (activeListName && listsData[activeListName]) ? listsData[activeListName] : [];
+  if(!blanks.length){ el.innerHTML = '<div class="empty">لا فراغات مكتشفة</div>'; return; }
+  el.innerHTML = blanks.map((b, idx)=>{
+    const options = fields.map((f,k)=>
+      `<option value="${k}" ${b.matchedFieldIdx===k?'selected':''}>${escHtml(f.label||'(بدون اسم) '+(k+1))} — ${escHtml(f.value)}</option>`
+    ).join('') + `<option value="-1" ${b.matchedFieldIdx===-1?'selected':''}>— بدون قيمة —</option>`;
+    const badge = b.matchedFieldIdx===-1 ? '' :
+      (b.matchType==='label' ? '<span class="badge badge-auto">مطابقة بالاسم</span>' : '<span class="badge badge-order">حسب الترتيب</span>');
+    const kindTag = b.kind==='pattern' ? '<span class="kind-tag">نمط نصي</span>' : '<span class="kind-tag kind-tag-yellow">تظليل أصفر</span>';
+    return `<div class="blank-item">
+      <div class="label">فراغ ${idx+1} ${kindTag}</div>
+      <div class="ctx">...${escHtml(b.contextBefore)}<mark>[فراغ]</mark>${escHtml(b.contextAfter)}...</div>
+      <div class="match">
+        <select onchange="manualMatch(${idx}, this.value)">${options}</select>
+        ${badge}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function manualMatch(blankIdx, fieldIdx){
+  blanks[blankIdx].matchedFieldIdx = parseInt(fieldIdx,10);
+  blanks[blankIdx].matchType = 'manual';
+  renderBlanks();
+}
+
+// ---------- Fill logic (pure XML mutation, no DOM/download side effects — testable in isolation) ----------
+// If the character right before/after the blank is a letter or digit with no
+// space/punctuation, the filled value would visually stick to it (e.g. the
+// template had "الاسم" directly followed by the yellow box, no real space
+// character between them) — pad with a space so it reads naturally.
+function padValue(value, contextBefore, contextAfter){
+  if(!value) return value;
+  const wordChar = /[\p{L}\p{N}]/u;
+  const lastBefore = (contextBefore||'').slice(-1);
+  const firstAfter = (contextAfter||'').slice(0,1);
+  let out = value;
+  if(lastBefore && wordChar.test(lastBefore)) out = ' ' + out;
+  if(firstAfter && wordChar.test(firstAfter)) out = out + ' ';
+  return out;
+}
+
+function fillBlanksIntoXml(fields, removeHl){
+    blanks.forEach(b=>{
+      const rawValue = (b.matchedFieldIdx>=0 && fields[b.matchedFieldIdx]) ? fields[b.matchedFieldIdx].value : '';
+      const value = padValue(rawValue, b.contextBefore, b.contextAfter);
+
+      if(b.kind === 'pattern'){
+        // The blank is a substring (____ / .... / [ ]) inside one run that
+        // may also contain other text — replace only that substring in place.
+        const run = b.run;
+        const tNodes = Array.from(run.getElementsByTagName('w:t'));
+        const fullText = tNodes.map(t=>t.textContent).join('');
+        const newFullText = fullText.slice(0, b.matchStart) + value + fullText.slice(b.matchStart + b.matchLen);
+        tNodes.forEach((t, idx)=>{
+          if(idx === 0){
+            t.textContent = newFullText;
+            t.setAttribute('xml:space', 'preserve');
+          } else {
+            t.textContent = '';
+          }
+        });
+        return;
+      }
+
+      // kind === 'highlight': target run = first run in the group. Strip ALL
+      // its existing children except rPr (covers w:t, w:tab, empty runs, etc.)
+      // then insert one clean w:t.
+      const targetRun = b.group[0].run;
+      Array.from(targetRun.childNodes).forEach(child=>{
+        if(child.nodeName !== 'w:rPr') targetRun.removeChild(child);
+      });
+      const newT = xmlDoc.createElement('w:t');
+      newT.setAttribute('xml:space', 'preserve');
+      newT.textContent = value;
+      targetRun.appendChild(newT);
+
+      // Any extra merged runs beyond the first: empty them out completely
+      // (their old dashes/tabs/text must not linger next to the new value).
+      b.group.slice(1).forEach(runInfo=>{
+        Array.from(runInfo.run.childNodes).forEach(child=>{
+          if(child.nodeName !== 'w:rPr') runInfo.run.removeChild(child);
+        });
+      });
+
+      if(removeHl){
+        b.group.forEach(runInfo=>{
+          const rPr = runInfo.run.getElementsByTagName('w:rPr')[0];
+          if(rPr){
+            const hl = rPr.getElementsByTagName('w:highlight')[0];
+            if(hl) hl.parentNode.removeChild(hl);
+            const shd = rPr.getElementsByTagName('w:shd')[0];
+            if(shd) shd.parentNode.removeChild(shd);
+          }
+        });
+      }
+    });
+}
+
+// ---------- Generate filled docx (DOM status updates + actual file download) ----------
+async function generateDocx(){
+  const statusEl = document.getElementById('genStatus');
+  if(!zipRef || !xmlDoc){ statusEl.textContent='لا يوجد مستند مرفوع'; statusEl.className='status err'; return; }
+  statusEl.textContent = 'جارٍ إنشاء الملف...';
+  statusEl.className = 'status';
+  try{
+    const fields = (activeListName && listsData[activeListName]) ? listsData[activeListName] : [];
+    const removeHl = document.getElementById('removeHighlight').checked;
+
+    fillBlanksIntoXml(fields, removeHl);
+
+    const serializer = new XMLSerializer();
+    const newXml = serializer.serializeToString(xmlDoc);
+    zipRef.file('word/document.xml', newXml);
+    const blob = await zipRef.generateAsync({type:'blob', mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'مستند_معبأ.docx';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    statusEl.textContent = 'تم إنشاء الملف وتنزيله ✓';
+    statusEl.className = 'status ok';
+  }catch(err){
+    statusEl.textContent = 'حدث خطأ أثناء إنشاء الملف: ' + err.message;
+    statusEl.className = 'status err';
+  }
+}
+
+loadAppearance();
+loadLists();
+</script>
+</body>
+</html>
